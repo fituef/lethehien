@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saigon Motorbike Tours – Data Mining Dashboard | Vespa Adventures vs XO Tours</title>
+
+  <!-- Modern Typography: Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Chart.js v4 via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Dashboard Stylesheet (Light Theme, Pure Flat Colors, Zero Gradient) -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- ======================================================================
+       HEADER & INTERACTIVE FILTER CONTROLS
+       ====================================================================== -->
+  <header class="header-bar">
+    <div class="header-top">
+      <div class="brand-title">
+        <div class="brand-icon">DMD</div>
+        <div class="title-text">
+          <h1>HỆ THỐNG KHAI PHÁ DỮ LIỆU ĐÁNH GIÁ TRỰC TUYẾN DỊCH VỤ TOUR XE MÁY TP.HCM</h1>
+          <p>Phân tích đối sánh thực nghiệm giữa Vespa Adventures và XO Tours qua dữ liệu Google Maps &amp; Tripadvisor
+            (2011–2026)</p>
+        </div>
+      </div>
+      <div class="meta-pills">
+        <span class="pill-tag">Dung lượng mẫu: N = 16,974</span>
+        <span class="pill-tag">Giai đoạn quan sát: 2011–2026</span>
+        <span class="pill-tag">Mô hình: 2 Đơn vị &times; 2 Kênh thu thập</span>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <!-- Brand Filter -->
+      <div class="filter-group">
+        <span class="filter-label">Đơn vị khảo sát:</span>
+        <div class="btn-group">
+          <button class="filter-btn active" data-brand="all">Toàn bộ</button>
+          <button class="filter-btn" data-brand="vespa">Vespa Adventures</button>
+          <button class="filter-btn" data-brand="xo">XO Tours</button>
+        </div>
+      </div>
+
+      <!-- Platform Filter -->
+      <div class="filter-group">
+        <span class="filter-label">Kênh thu thập:</span>
+        <div class="btn-group">
+          <button class="filter-btn active" data-platform="all">Toàn bộ</button>
+          <button class="filter-btn" data-platform="gm">Google Maps</button>
+          <button class="filter-btn" data-platform="ta">Tripadvisor</button>
+        </div>
+      </div>
+
+      <!-- Year Range Filter -->
+      <div class="filter-group">
+        <span class="filter-label" title="Áp dụng cho biểu đồ xu hướng theo chuỗi thời gian">Giai đoạn:</span>
+        <div class="btn-group">
+          <button class="filter-btn active" data-year-range="all">Toàn bộ chu kỳ</button>
+          <button class="filter-btn" data-year-range="2011-2019">2011–2019 (Tiền đại dịch)</button>
+          <button class="filter-btn" data-year-range="2020-2023">2020–2023 (Khủng hoảng &amp; Phục hồi)</button>
+          <button class="filter-btn" data-year-range="2024-2026">2024–2026 (Tăng trưởng hậu đại dịch)</button>
+        </div>
+      </div>
+
+      <!-- Reset Button -->
+      <button class="btn-reset" id="btnResetFilters">Thiết lập lại bộ lọc</button>
+    </div>
+  </header>
+
+  <!-- ======================================================================
+       MAIN CONTENT CONTAINER
+       ====================================================================== -->
+  <main class="dashboard-container">
+
+    <!-- SECTION 1: SUMMARY METRICS -->
+    <section class="kpi-grid">
+      <!-- Card 1: Total Sample Size -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Tổng dung lượng mẫu (N)</span>
+        </div>
+        <div class="kpi-value" id="kpiTotalReviews">16,974</div>
+        <div class="kpi-breakdown">
+          <div class="kpi-sub-item">
+            <span class="dot dot-vespa"></span>
+            <span id="kpiTotalSubVespa">Vespa: 7,360</span>
+          </div>
+          <div class="kpi-sub-item">
+            <span class="dot dot-xo"></span>
+            <span id="kpiTotalSubXo">XO: 9,614</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Average Rating -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Điểm đánh giá trung bình (Mean)</span>
+        </div>
+        <div class="kpi-value" id="kpiAvgRating" style="color: #D97706;">4.96 / 5.00</div>
+        <div class="kpi-breakdown">
+          <div class="kpi-sub-item">
+            <span class="dot dot-vespa"></span>
+            <span id="kpiRatingSubVespa">Vespa: 4.95 / 5.00</span>
+          </div>
+          <div class="kpi-sub-item">
+            <span class="dot dot-xo"></span>
+            <span id="kpiRatingSubXo">XO: 4.97 / 5.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Five Star Ratio -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Tỷ lệ đánh giá tối đa (5/5 sao)</span>
+        </div>
+        <div class="kpi-value" id="kpiFiveStarPct" style="color: #059669;">96.8%</div>
+        <div class="kpi-breakdown">
+          <span style="color: var(--text-muted); font-size: 11px;">Tần số xuất hiện:</span>
+          <span id="kpiFiveStarCount" style="font-weight: 600; color: var(--text-main);">16,433 / 16,974</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Word Count / In-depth -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Độ dài văn bản trung bình</span>
+        </div>
+        <div class="kpi-value" id="kpiAvgWords">90.6 từ</div>
+        <div class="kpi-breakdown">
+          <div class="kpi-sub-item">
+            <span class="dot dot-gm"></span>
+            <span id="kpiWordsSubGm">Google Maps: 47.9 từ</span>
+          </div>
+          <div class="kpi-sub-item">
+            <span class="dot dot-ta"></span>
+            <span id="kpiWordsSubTa">Tripadvisor: 112.0 từ</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: 2x2 SEGMENT MATRIX -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h2>Ma trận phân tích chéo 2 &times; 2: Đơn vị khảo sát &times; Kênh thu thập</h2>
+          <div class="card-subtitle">Đối sánh quy mô dữ liệu, độ dài phản hồi văn bản, chu kỳ trọng tâm và lợi thế cạnh
+            tranh tương đối</div>
+        </div>
+        <span class="badge" style="background-color: #EEF2F6; color: #334155;">4 Phân khúc dữ liệu</span>
+      </div>
+      <div class="matrix-grid" id="matrixGrid">
+        <!-- Dynamically rendered via app.js -->
+      </div>
+    </section>
+
+    <!-- SECTION 3: RADAR & TOUR TYPES CHARTS -->
+    <section class="charts-dual-grid">
+      <!-- Radar Chart: Aspects -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>Phân tích tình cảm dựa trên thuộc tính dịch vụ (ABSA)</h2>
+            <div class="card-subtitle">Tỷ lệ phần trăm mẫu đánh giá đề cập đến từng thuộc tính cấu thành chất lượng dịch
+              vụ</div>
+          </div>
+          <span class="badge" style="background-color: #F1F5F9; color: #475569;">Radar Chart</span>
+        </div>
+        <div class="chart-container-radar">
+          <canvas id="radarChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Horizontal Bar Chart: Tour Types -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>Cơ cấu danh mục tour dựa trên trích xuất nội dung văn bản</h2>
+            <div class="card-subtitle">Tỷ lệ phần trăm đánh giá phản ánh từng dòng sản phẩm tour du lịch trải nghiệm
+            </div>
+          </div>
+          <span class="badge" style="background-color: #F1F5F9; color: #475569;">Grouped Bar</span>
+        </div>
+        <div class="chart-container-bar">
+          <canvas id="tourTypesChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: TIME SERIES & TRAVELER PROFILES -->
+    <section class="charts-dual-grid">
+      <!-- Line Chart: Time Series -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>Biến động tần suất phản hồi theo chuỗi thời gian (2011–2026)</h2>
+            <div class="card-subtitle">Quy luật biến động quy mô phản hồi và xu thế dịch chuyển kênh thu thập giai đoạn
+              hậu đại dịch &bull; Tương tác theo bộ lọc Giai đoạn</div>
+          </div>
+          <span class="badge" style="background-color: #F1F5F9; color: #475569;">Longitudinal Analysis</span>
+        </div>
+        <div class="chart-container-line">
+          <canvas id="timeSeriesChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Doughnut Chart: Traveler Profiles -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>Cơ cấu phân khúc du khách theo mục đích chuyến đi</h2>
+            <div class="card-subtitle">Phân bố đối tượng du khách từ tập dữ liệu có định danh Tripadvisor (N = 8,125)
+            </div>
+          </div>
+          <span class="badge" style="background-color: #F1F5F9; color: #475569;">Doughnut Chart</span>
+        </div>
+        <div class="chart-container-doughnut">
+          <canvas id="travelerChart"></canvas>
+          <div id="travelerAlertBox" class="empty-data-alert" style="display: none;">
+            <div class="alert-icon-text">GHI CHÚ</div>
+            <h4>Thông tin không khả dụng trên kênh Google Maps</h4>
+            <p style="font-size: 13px; margin-top: 6px;">Trường dữ liệu mục đích chuyến đi (travel_type) chỉ được ghi
+              nhận có hệ thống trên kênh Tripadvisor. Vui lòng chuyển bộ lọc sang "Toàn bộ" hoặc "Tripadvisor" để phân
+              tích chi tiết.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: PAIN POINTS MINING ACCORDION TABLE -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h2>Phân tích nguyên nhân phản hồi bất lợi (Service Failure Analysis)</h2>
+          <div class="card-subtitle">Phân loại và trích xuất nguyên nhân từ nhóm đánh giá dưới kỳ vọng (Thang điểm 1–3 /
+            5.00, N = 97)</div>
+        </div>
+        <span class="badge"
+          style="background-color: var(--color-danger-light); color: var(--color-danger); border: 1px solid #FECACA;">
+          97 Bản ghi bất lợi (0.57% tổng mẫu)
+        </span>
+      </div>
+
+      <!-- Pain Points Summary Banner -->
+      <div class="pain-points-summary-row">
+        <div class="pain-stats-card">
+          <div>
+            <div style="font-weight: 700; color: #991B1B; font-size: 14px;">Kết quả phân tích thống kê chính:</div>
+            <div style="font-size: 13px; color: #7F1D1D; margin-top: 4px; line-height: 1.6;">
+              Tỷ lệ hài lòng chung của cả hai đơn vị đạt mức rất cao (>99.4% đánh giá 4-5 sao). Trong nhóm phản hồi dưới
+              kỳ vọng (N = 97), nguyên nhân chiếm tỷ trọng lớn nhất là <strong>Tương quan chi phí - giá trị (Price /
+                Value, chiếm 49.5%)</strong>. Đáng chú ý, 100% phản hồi về <strong>Tác động môi trường &amp; Khí thải (3
+                bản ghi, chiếm 3.1%)</strong> thuộc về Vespa Adventures do đặc thù sử dụng dòng xe Vespa cổ động cơ 2
+              thì.
+            </div>
+          </div>
+        </div>
+        <div
+          style="background-color: #F8FAFC; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 18px; display: flex; flex-direction: column; justify-content: center;">
+          <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Tỷ lệ
+            phản hồi bất lợi theo đơn vị</div>
+          <div
+            style="font-size: 15px; font-weight: 700; margin-top: 4px; display: flex; justify-content: space-between;">
+            <span style="color: var(--vespa-primary);">Vespa: 58 / 7,360 (0.79%)</span>
+            <span style="color: var(--xo-primary);">XO: 39 / 9,614 (0.41%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pain Points Table -->
+      <div class="pain-table-container">
+        <table class="pain-table">
+          <thead>
+            <tr>
+              <th style="width: 38%;">Nhóm nguyên nhân bất lợi</th>
+              <th style="width: 10%; text-align: center;">Tần số (N)</th>
+              <th style="width: 10%; text-align: center;">Tỷ lệ (%)</th>
+              <th style="width: 20%;">Phân bổ tương đối</th>
+              <th style="width: 14%;">Phân bổ theo đơn vị</th>
+              <th style="width: 8%; text-align: right;">Minh chứng</th>
+            </tr>
+          </thead>
+          <tbody id="painTableBody">
+            <!-- Dynamically populated via app.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- DASHBOARD FOOTER -->
+    <footer class="dashboard-footer">
+      <p style="margin-top: 4px; font-size: 12px; color: #94A3B8;">
+        Tập dữ liệu chuẩn hóa: 16,974 bản ghi (Google Maps &amp; Tripadvisor) &bull; Giai đoạn 2011–2026 &bull; Giao
+        diện Light Theme học thuật, thiết kế phẳng thuần nhất
+      </p>
+    </footer>
+
+  </main>
+
+  <!-- Mining Data Scripts -->
+  <script src="mining_insights.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
